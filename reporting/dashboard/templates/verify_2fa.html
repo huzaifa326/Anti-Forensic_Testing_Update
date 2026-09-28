@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card" style="max-width: 450px; margin: 60px auto;">
+    <div class="card-header">
+        <div class="card-title"><i class="fa-solid fa-shield-halved" style="color:var(--accent-light);"></i> Two-Factor Authentication</div>
+    </div>
+    <div style="padding: 10px;">
+        <p class="meta-text" style="font-size: 0.95rem; margin-bottom: 20px; text-align: center;">
+            Please enter the 6-digit code sent to your email address to continue.
+        </p>
+        <form method="POST" action="{{ url_for('verify_2fa') }}">
+            <div class="form-group">
+                <label for="code">Security Code</label>
+                <input type="text" id="code" name="code" class="form-control" 
+                       style="text-align: center; letter-spacing: 12px; font-size: 1.3rem; font-family: 'JetBrains Mono', monospace;" 
+                       placeholder="XXXXXX" required autocomplete="off" maxlength="6">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; height: 42px; margin-top:15px;">
+                <i class="fa-solid fa-shield-check"></i> Verify Code
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

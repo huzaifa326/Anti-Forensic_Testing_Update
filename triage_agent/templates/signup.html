@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h2>Investigator Signup</h2>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <form method="POST">
+        <label for="username">Choose a Username</label>
+        <input type="text" id="username" name="username" required>
+        
+        <label for="password">Create Password</label>
+        <input type="password" id="password" name="password" required autocomplete="off">
+        
+        <button type="submit">Create Account</button>
+    </form>
+    <a href="{{ url_for('login') }}" class="link-text">Already have an account? Log In</a>
+</div>
+{% endblock %}

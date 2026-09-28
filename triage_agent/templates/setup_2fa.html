@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h2>Set Up 2FA</h2>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <div style="text-align: center; margin-bottom: 20px;">
+        <p style="font-size: 0.9rem; color: #94a3b8;">Scan this QR code with your Authenticator App.</p>
+        <img src="data:image/png;base64,{{ qr_b64 }}" style="border-radius: 8px; margin-bottom: 10px; border: 4px solid #fff;">
+        <p style="font-family: monospace; color: #3b82f6; font-size: 1.1rem; letter-spacing: 2px;">{{ secret }}</p>
+    </div>
+    <form method="POST">
+        <label for="code">Enter 6-digit Code to Verify</label>
+        <input type="text" id="code" name="code" required autocomplete="off" placeholder="e.g. 123456" style="text-align:center; font-family: monospace; font-size: 1.2rem; letter-spacing: 4px;">
+        <button type="submit">Complete Setup</button>
+    </form>
+</div>
+{% endblock %}

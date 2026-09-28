@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CyberForensX Triage</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #0f172a; /* Outer space dark */
+            color: #d1d5db; 
+            margin: 0; 
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        
+        .card { 
+            background-color: #1e293b; 
+            padding: 40px; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            width: 100%;
+            max-width: 480px;
+            border: 1px solid #334155;
+        }
+
+        h2 { 
+            color: #3b82f6; 
+            margin-top: 0; 
+            font-weight: 600; 
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+        
+        input[type="text"], input[type="password"] { 
+            width: 100%; 
+            padding: 12px; 
+            margin-bottom: 20px; 
+            box-sizing: border-box; 
+            border: 1px solid #334155;
+            border-radius: 6px;
+            background-color: #0f172a;
+            color: white;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        button { 
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+            width: 100%;
+            padding: 14px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: transform 0.1s, box-shadow 0.2s;
+        }
+        
+        button:hover { 
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .alert {
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        .alert-error { background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .alert-info  { background-color: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+        
+        .link-text {
+            color: #3b82f6;
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: block;
+            text-align: center;
+            margin-top: 16px;
+        }
+        
+        .link-text:hover { text-decoration: underline; }
+        
+        /* Dashboard Specifics */
+        .dashboard-container { max-width: 800px; width: 100%; margin: 20px; align-self: flex-start; margin-top: 60px;}
+        .log-box { 
+            background: #000; 
+            color: #22c55e; /* Electric Green */
+            padding: 16px; 
+            height: 250px; 
+            overflow-y: auto; 
+            font-family: monospace; 
+            font-size: 0.95rem;
+            border-radius: 6px;
+            border: 1px solid #334155;
+            margin-top: 20px;
+        }
+        .checkbox-group { margin: 20px 0; background: #0f172a; padding: 16px; border-radius: 6px; border: 1px solid #334155; }
+        .checkbox-group label { display: flex; align-items: center; justify-content: flex-start; color: #cbd5e1; cursor: pointer; margin-bottom: 12px;}
+        .checkbox-group label:last-child { margin-bottom: 0; }
+        .checkbox-group input { margin-right: 12px; transform: scale(1.2); }
+        
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .navbar span { font-weight: 600; color: #94a3b8; }
+        .btn-small { background: #334155; width: auto; padding: 8px 16px; font-size: 0.85rem;}
+        .btn-small:hover { background: #475569; box-shadow: none; }
+        
+    </style>
+</head>
+<body>
+    {% block content %}{% endblock %}
+</body>
+</html>

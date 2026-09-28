@@ -1,0 +1,862 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .alert-card-high { border-left: 4px solid #ef4444; }
+    .alert-card-medium { border-left: 4px solid #f97316; }
+    .alert-card-low { border-left: 4px solid #eab308; }
+    .color-collected { color: var(--success-green); }
+    .color-analyzed { color: var(--accent-blue); }
+    .text-high { color: var(--danger-red); }
+    .text-medium { color: var(--warning-yellow); }
+    .text-low { color: var(--info-blue); }
+</style>
+<div class="header-section" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+    <div>
+        <div style="margin-bottom:6px;">
+            <a href="/" style="color:var(--text-secondary);text-decoration:none;font-size:0.82rem;display:inline-flex;align-items:center;gap:5px;">
+                <i class="fa-solid fa-arrow-left"></i> Dashboard
+            </a>
+        </div>
+        <h1 class="page-title">{{ case.case_id }}</h1>
+        <p class="page-subtitle">{{ case.title }} &bull; Investigated by {{ case.investigator }}</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;padding-top:8px;">
+        <span class="badge badge-{% if case.status == 'open' %}green{% else %}yellow{% endif %}" style="font-size:0.85rem;padding:5px 12px;">
+            <i class="fa-solid fa-{% if case.status == 'open' %}circle-check{% else %}folder-closed{% endif %}"></i>
+            {{ case.status|upper }}
+        </span>
+    </div>
+</div>
+
+<!-- ─── Alerts & Findings Section (Iteration 3 Results) ────── -->
+{% if alerts %}
+<div style="margin-top:20px;margin-bottom:20px;">
+    <h2 style="color:var(--text-primary);margin-bottom:12px;font-size:1.15rem;"><i class="fa-solid fa-bell"></i> Detected Alerts & Findings</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;">
+        {% for alert in alerts %}
+        <div class="card alert-card-{{ alert.severity }}" style="padding:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">
+                <h4 style="color:var(--text-primary);margin:0;font-weight:600;">{{ alert.alert_type|title|replace('_', ' ') }}</h4>
+                <span class="badge badge-{% if alert.severity == 'high' %}red{% elif alert.severity == 'medium' %}orange{% else %}yellow{% endif %}" style="font-size:0.75rem;padding:3px 8px;">
+                    {{ alert.severity|upper }}
+                </span>
+            </div>
+            <p style="color:var(--text-secondary);margin:0;font-size:0.9rem;margin-bottom:8px;">{{ alert.description }}</p>
+            {% if alert.mitre_technique %}
+            <span class="badge badge-blue" style="font-size:0.75rem;">MITRE: {{ alert.mitre_technique }}</span>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- ─── Key Actions Row 1 ──────────────────────────────────── -->
+<div class="grid-3" style="margin-top:20px;">
+    <!-- Collect Evidence -->
+    <div class="card card-accent-green" style="display:flex;flex-direction:column;align-items:center;text-align:center;">
+        <div style="width:44px;height:44px;border-radius:10px;background:rgba(63,185,80,0.12);display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
+            <i class="fa-solid fa-download" style="font-size:1.2rem;color:#4ade80;"></i>
+        </div>
+        <h3 class="card-title" style="color:#4ade80;margin-bottom:4px;">Collect Evidence</h3>
+        <p class="meta-text" style="margin-bottom:12px;">Select what to capture</p>
+        {% if case.status != 'closed' %}
+        <form action="{{ url_for('collect_evidence_route', case_id=case.case_id) }}" method="POST" style="margin:0;width:100%;"
+              onsubmit="this.querySelector('.collect-btn').disabled=true;this.querySelector('.collect-btn').textContent='Collecting…'">
+            <div class="evidence-options">
+                <label class="evidence-checkbox">
+                    <input type="checkbox" name="collect_all" id="collect-all" onchange="toggleAll(this)">
+                    <span><i class="fa-solid fa-layer-group"></i> Select All</span>
+                </label>
+                <hr style="border-color:var(--border-subtle);margin:4px 0;">
+                <label class="evidence-checkbox">
+                    <input type="checkbox" name="collectors" value="network" class="collector-cb">
+                    <span><i class="fa-solid fa-network-wired"></i> Network</span>
+                </label>
+                <label class="evidence-checkbox">
+                    <input type="checkbox" name="collectors" value="logs" class="collector-cb">
+                    <span><i class="fa-solid fa-clipboard-list"></i> System Logs</span>
+                </label>
+                <label class="evidence-checkbox">
+                    <input type="checkbox" name="collectors" value="bash" class="collector-cb">
+                    <span><i class="fa-solid fa-terminal"></i> Bash History</span>
+                </label>
+                <label class="evidence-checkbox">
+                    <input type="checkbox" name="collectors" value="disk" class="collector-cb">
+                    <span><i class="fa-solid fa-hard-drive"></i> Disk Configs</span>
+                </label>
+                <label class="evidence-checkbox">
+                    <input type="checkbox" name="collectors" value="browser" class="collector-cb">
+                    <span><i class="fa-solid fa-globe"></i> Browser History</span>
+                </label>
+            </div>
+            <button type="submit" class="btn btn-success btn-sm collect-btn" style="margin-top:10px;width:100%;">
+                <i class="fa-solid fa-play"></i> Run Collection
+            </button>
+        </form>
+        {% else %}
+        <span class="meta-text">Case is closed</span>
+        {% endif %}
+    </div>
+
+    <!-- Parse Artifacts -->
+    <div class="card card-accent-purple" style="display:flex;flex-direction:column;align-items:center;text-align:center;">
+        <div style="width:44px;height:44px;border-radius:10px;background:rgba(124,58,237,0.12);display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
+            <i class="fa-solid fa-file-code" style="font-size:1.2rem;color:#c084fc;"></i>
+        </div>
+        <h3 class="card-title" style="color:#c084fc;margin-bottom:4px;">Parse Artifacts</h3>
+        <p class="meta-text" style="margin-bottom:12px;">Raw logs → structured JSON &amp; unified features</p>
+        {% if case.status != 'closed' %}
+        <form action="{{ url_for('parse_artifacts_route', case_id=case.case_id) }}" method="POST" style="margin:0;"
+              onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='Parsing…'">
+            <button type="submit" class="btn btn-sm" style="background:rgba(124,58,237,0.2);color:#c084fc;border:1px solid rgba(124,58,237,0.4);">
+                <i class="fa-solid fa-cogs"></i> Run Parsing
+            </button>
+        </form>
+        {% else %}
+        <span class="meta-text">Case is closed</span>
+        {% endif %}
+    </div>
+
+    <!-- View Timeline -->
+    <div class="card card-accent-cyan" style="display:flex;flex-direction:column;align-items:center;text-align:center;">
+        <div style="width:44px;height:44px;border-radius:10px;background:rgba(6,182,212,0.12);display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
+            <i class="fa-solid fa-timeline" style="font-size:1.2rem;color:#22d3ee;"></i>
+        </div>
+        <h3 class="card-title" style="color:#22d3ee;margin-bottom:4px;">View Timeline</h3>
+        <p class="meta-text" style="margin-bottom:12px;">Unified sorted timeline of all forensic events</p>
+        <a href="{{ url_for('view_timeline', case_id=case.case_id) }}" class="btn btn-sm"
+           style="background:rgba(6,182,212,0.15);color:#22d3ee;border:1px solid rgba(6,182,212,0.4);text-decoration:none;">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Timeline
+        </a>
+    </div>
+</div>
+
+<!-- ─── Key Actions Row 2: Threat Intel + Iter 3 placeholder ─ -->
+<div class="grid-3" style="margin-top:0;">
+    <!-- VirusTotal Scan -->
+    <div class="card card-accent-blue" style="display:flex;flex-direction:column;align-items:center;text-align:center;">
+        <div style="width:44px;height:44px;border-radius:10px;background:rgba(37,99,235,0.12);display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
+            <i class="fa-solid fa-file-shield" style="font-size:1.2rem;color:#60a5fa;"></i>
+        </div>
+        <h3 class="card-title" style="color:#60a5fa;margin-bottom:4px;">VirusTotal Scan</h3>
+        <p class="meta-text" style="margin-bottom:12px;">Scan all artifacts against VT malware database</p>
+        {% if case.status != 'closed' and artifacts %}
+        <form action="{{ url_for('scan_all_vt', case_id=case.case_id) }}" method="POST" style="margin:0;"
+              onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='Scanning…'">
+            <button type="submit" class="btn btn-sm" style="background:rgba(37,99,235,0.2);color:#60a5fa;border:1px solid rgba(37,99,235,0.4);">
+                <i class="fa-solid fa-shield-virus"></i> Scan All
+            </button>
+        </form>
+        {% elif not artifacts %}
+        <span class="meta-text">Collect evidence first</span>
+        {% else %}
+        <span class="meta-text">Case is closed</span>
+        {% endif %}
+    </div>
+
+    <!-- MISP IOC Search -->
+    <div class="card card-accent-yellow" style="display:flex;flex-direction:column;align-items:center;text-align:center;">
+        <div style="width:44px;height:44px;border-radius:10px;background:rgba(210,153,34,0.12);display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
+            <i class="fa-solid fa-globe" style="font-size:1.2rem;color:#fbbf24;"></i>
+        </div>
+        <h3 class="card-title" style="color:#fbbf24;margin-bottom:4px;">MISP IOC Search</h3>
+        <p class="meta-text" style="margin-bottom:12px;">Search hash, IP, or domain in MISP</p>
+        <form action="{{ url_for('analyze_url') }}" method="POST" style="margin:0;width:100%;">
+            <input type="hidden" name="case_id" value="{{ case.case_id }}">
+            <input type="text" name="ioc_value" placeholder="Hash, IP, or domain…"
+                   style="width:90%;padding:7px 10px;margin-bottom:8px;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-color);border-radius:6px;font-size:0.83rem;font-family:inherit;">
+            <br>
+            <button type="submit" class="btn btn-sm" style="background:rgba(210,153,34,0.15);color:#fbbf24;border:1px solid rgba(210,153,34,0.4);">
+                <i class="fa-solid fa-magnifying-glass"></i> Search MISP
+            </button>
+        </form>
+    </div>
+
+    <!-- ML Anomaly Detection — Iteration 3 -->
+    <div class="card card-accent-orange" style="display:flex;flex-direction:column;align-items:center;text-align:center;">
+        <div style="width:44px;height:44px;border-radius:10px;background:rgba(249,115,22,0.12);display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
+            <i class="fa-solid fa-brain" style="font-size:1.2rem;color:#fb923c;"></i>
+        </div>
+        <h3 class="card-title" style="color:#fb923c;margin-bottom:4px;">ML Anomaly Scan</h3>
+        <p class="meta-text" style="margin-bottom:12px;">Isolation Forest anomaly detection</p>
+        {% if case.status != 'closed' %}
+        <form action="{{ url_for('run_ml_anomaly_scan', case_id=case.case_id) }}" method="POST" style="margin:0;"
+              onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='Scanning…'">
+            <button type="submit" class="btn btn-sm" style="background:rgba(249,115,22,0.2);color:#fb923c;border:1px solid rgba(249,115,22,0.4);">
+                <i class="fa-solid fa-microchip"></i> Run ML Scan
+            </button>
+        </form>
+        {% else %}
+        <span class="meta-text">Case is closed</span>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ─── Iteration 3: Advanced Analysis Row ─────────────────── -->
+<div class="grid-2" style="margin-top:0;">
+    <!-- Anti-Forensics Detection — Iteration 3 -->
+    <div class="card card-accent-red" style="display:flex;flex-direction:column;align-items:center;text-align:center;">
+        <div style="width:44px;height:44px;border-radius:10px;background:rgba(239,68,68,0.12);display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
+            <i class="fa-solid fa-shield-halved" style="font-size:1.2rem;color:#f87171;"></i>
+        </div>
+        <h3 class="card-title" style="color:#f87171;margin-bottom:4px;">Anti-Forensics Scan</h3>
+        <p class="meta-text" style="margin-bottom:12px;">Detect timestomping, hidden files, rootkits</p>
+        {% if case.status != 'closed' %}
+        <form action="{{ url_for('run_anti_forensics_scan', case_id=case.case_id) }}" method="POST" style="margin:0;"
+              onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='Scanning…'">
+            <button type="submit" class="btn btn-sm" style="background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.4);">
+                <i class="fa-solid fa-triangle-exclamation"></i> Detect Evasion
+            </button>
+        </form>
+        {% else %}
+        <span class="meta-text">Case is closed</span>
+        {% endif %}
+    </div>
+
+    <!-- Blockchain Chain of Custody — Iteration 3 -->
+    <div class="card card-accent-indigo" style="display:flex;flex-direction:column;align-items:center;text-align:center;">
+        <div style="width:44px;height:44px;border-radius:10px;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
+            <i class="fa-solid fa-link" style="font-size:1.2rem;color:#818cf8;"></i>
+        </div>
+        <h3 class="card-title" style="color:#818cf8;margin-bottom:4px;">Blockchain Chain of Custody</h3>
+        <p class="meta-text" style="margin-bottom:12px;">Log artifacts to immutable ledger</p>
+        {% if case.status != 'closed' and artifacts %}
+        <form action="{{ url_for('run_blockchain_logging', case_id=case.case_id) }}" method="POST" style="margin:0;"
+              onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='Logging…'">
+            <button type="submit" class="btn btn-sm" style="background:rgba(99,102,241,0.2);color:#818cf8;border:1px solid rgba(99,102,241,0.4);">
+                <i class="fa-solid fa-cube"></i> Log to Blockchain
+            </button>
+        </form>
+        {% elif not artifacts %}
+        <span class="meta-text">Collect evidence first</span>
+        {% else %}
+        <span class="meta-text">Case is closed</span>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Report & Validation Actions -->
+<div class="grid-2" style="margin-top:12px;">
+    <div class="card">
+        <div class="card-header"><h3 class="card-title"><i class="fa-solid fa-file-pdf"></i> Reports</h3></div>
+        <div style="padding:16px;display:flex;gap:8px;align-items:center;">
+            <form action="{{ url_for('generate_pdf_report', case_id=case.case_id) }}" method="POST" style="margin:0;">
+                <button class="btn btn-primary btn-sm" type="submit"><i class="fa-solid fa-download"></i> Download PDF Report</button>
+            </form>
+            <span class="meta-text">Generate a concise PDF summary of artifacts and alerts.</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><h3 class="card-title"><i class="fa-solid fa-check"></i> Validation</h3></div>
+        <div style="padding:16px;display:flex;gap:8px;align-items:center;">
+            <form action="{{ url_for('run_validation', case_id=case.case_id) }}" method="POST" style="margin:0;display:flex;gap:8px;align-items:center;">
+                <input type="text" name="dataset_file" placeholder="dataset.json" style="padding:8px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-input);color:var(--text-primary);">
+                <button class="btn btn-sm" type="submit">Validate</button>
+            </form>
+            <span class="meta-text">Validate processed logs against a ground-truth dataset (stored in storage/processed/datasets).</span>
+        </div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <!-- Collected Artifacts (Functional Iter 1) -->
+    <div class="card" style="grid-column: span 2;">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fa-solid fa-database text-muted"></i> Collected Artifacts</h3>
+            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                
+                <button class="btn btn-outline" id="toggle-artifacts-btn" onclick="toggleArtifacts()" style="padding: 6px 12px; font-size: 0.85rem;">
+                    <i class="fa-solid fa-eye"></i> View Artifacts
+                </button>
+                
+                <span class="badge badge-blue">{{ artifacts|length }} Files</span>
+                {% if artifacts %}
+                <button class="btn btn-primary" onclick="if(confirm('Run VirusTotal hash scan on ALL artifacts?')) document.getElementById('scan-form').submit();" style="padding: 6px 12px; font-size: 0.85rem;">
+                    <i class="fa-solid fa-magnifying-glass-chart"></i> Scan All (VT)
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if artifacts %}
+        <div id="artifacts-table-container" style="display: none;">
+            <div class="filter-bar" style="margin: 16px 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px; background: transparent;">
+                <div class="filter-group">
+                    <label>File Type</label>
+                    <select id="artifact-type-filter" class="filter-select" onchange="filterArtifactsAdvanced()" style="padding: 8px;">
+                        <option value="">All Types</option>
+                        <option value="offline_evidence">Offline Evidence</option>
+                        <option value="network">Network Data</option>
+                        <option value="config_file">Config Files</option>
+                        <option value="journal_log">Journal/Logs</option>
+                    </select>
+                </div>
+                <div class="filter-group" style="flex:1;min-width:160px;">
+                    <label>Search Data</label>
+                    <input type="text" id="artifact-search" class="filter-select" style="width:100%; padding: 8px;" placeholder="Filter by filename or hash..." onkeyup="filterArtifactsAdvanced()">
+                </div>
+            </div>
+            
+            <div class="table-container" style="margin-top: 0; border-top: none; max-height: 400px; overflow-y: auto;">
+                <table id="artifacts-table">
+                <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 10;">
+                    <tr>
+                        <th>#</th>
+                        <th>Type</th>
+                        <th>File Name</th>
+                        <th>SHA-256 Hash</th>
+                        <th>Live Integrity Check</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for art in artifacts %}
+                    <tr>
+                        <td><strong>#{{ loop.index }}</strong></td>
+                        <td>
+                            {% if art.artifact_type == 'network' %}<span class="badge badge-blue"><i class="fa-solid fa-network-wired"></i> Network</span>
+                            {% elif art.artifact_type == 'config_file' %}<span class="badge badge-yellow"><i class="fa-solid fa-gear"></i> Config</span>
+                            {% elif art.artifact_type == 'journal_log' %}<span class="badge badge-green"><i class="fa-solid fa-clipboard-list"></i> Log</span>
+                            {% else %}<span class="badge badge-blue">{{ art.artifact_type }}</span>{% endif %}
+                        </td>
+                        <td style="font-weight: 500;">{{ art.artifact_name }}<br><span class="meta-text">{{ art.file_path }}</span></td>
+                        <td class="hash-text" style="max-width: 250px;">{{ art.sha256_hash }}</td>
+                        <td>
+                            <button class="btn btn-outline" onclick="verifyHash('{{ art.id }}', '{{ case.case_id }}')" id="btn-{{ art.id }}" style="padding: 4px 8px; font-size: 0.8rem;">Verify Integrity</button>
+                            <span id="res-{{ art.id }}" style="margin-left: 8px; font-weight: 600; font-size: 0.85rem;"></span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <div class="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; padding: 16px; border-top: 1px solid var(--border-color);">
+                <div>
+                    <span class="meta-text" id="artifacts-page-info">Showing 0 of 0</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-outline btn-sm" id="btn-prev-artifact" onclick="changeArtifactPage(-1)" disabled><i class="fa-solid fa-chevron-left"></i> Previous</button>
+                    <button class="btn btn-outline btn-sm" id="btn-next-artifact" onclick="changeArtifactPage(1)" disabled>Next <i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+            </div>
+            
+            </div>
+        </div>
+        {% else %}
+        <p class="text-muted text-center" style="padding: 24px 0;">No evidence collected yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- Parsed Log Data (Iteration 2) -->
+    {% if parsing_done %}
+    <div class="card" style="grid-column: span 2;">
+        <div class="card-header" style="display: flex; flex-wrap: wrap; gap: 16px;">
+            <div>
+                <h3 class="card-title"><i class="fa-solid fa-file-code text-muted" style="color: #a78bfa !important;"></i> Parsed Log Data</h3>
+                <span class="meta-text">Total records: <strong id="parsed-total">{{ parsed_stats.total_records }}</strong></span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                {% for src, count in parsed_stats.source_counts.items() %}
+                <span class="badge badge-source-{{ src }}">{{ src }}: {{ count }}</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label>Source</label>
+                <select id="parsed-source-filter" class="filter-select">
+                    <option value="">All Sources</option>
+                    {% for src in parsed_stats.source_counts.keys() %}
+                    <option value="{{ src }}">{{ src }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Process</label>
+                <select id="parsed-cmd-filter" class="filter-select">
+                    <option value="">All Processes</option>
+                    <option value="kernel">kernel</option>
+                    <option value="sshd">sshd</option>
+                    <option value="sudo">sudo</option>
+                    <option value="CRON">CRON</option>
+                    <option value="systemd">systemd</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Per Page</label>
+                <select id="parsed-per-page" class="filter-select">
+                    <option value="25">25 logs</option>
+                    <option value="50" selected>50 logs</option>
+                    <option value="100">100 logs</option>
+                    <option value="200">200 logs</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Sort Order</label>
+                <select id="parsed-order" class="filter-select">
+                    <option value="desc">⬇ Newest First</option>
+                    <option value="asc">⬆ Oldest First</option>
+                </select>
+            </div>
+            <div class="filter-group" style="flex:1;min-width:160px;">
+                <label>Search</label>
+                <input type="text" id="parsed-search" class="filter-select" style="width:100%;" placeholder="Search logs…">
+            </div>
+            <div class="filter-group" style="justify-content:flex-end;">
+                <label style="visibility:hidden;">.</label>
+                <button class="btn btn-primary btn-sm" onclick="fetchParsedData(1)">
+                    <i class="fa-solid fa-filter"></i> Apply
+                </button>
+            </div>
+            <span id="parsed-loading" style="display:none;align-items:center;gap:6px;color:var(--text-secondary);font-size:0.85rem;">
+                <span class="spinner"></span> Loading…
+            </span>
+        </div>
+
+        <div class="table-container" style="margin-top: 16px; max-height: 500px; overflow-y: auto;">
+            <table id="parsed-table">
+                <thead style="position: sticky; top: 0; background: var(--bg-card);">
+                    <tr>
+                        <th style="width: 140px;">Timestamp</th>
+                        <th style="width: 100px;">Source</th>
+                        <th style="width: 120px;">Process/Cmd</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody id="parsed-tbody">
+                    <tr><td colspan="4" class="text-center text-muted" style="padding: 24px;">Loading data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+            <div>
+                <span class="meta-text" id="parsed-page-info">Showing 0 of 0</span>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn btn-outline btn-sm" id="btn-prev-page" onclick="changePage(-1)" disabled><i class="fa-solid fa-chevron-left"></i> Previous</button>
+                <button class="btn btn-outline btn-sm" id="btn-next-page" onclick="changePage(1)" disabled>Next <i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Chain of Custody Log (Functional Iter 1) -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fa-solid fa-shoe-prints text-muted"></i> Chain of Custody</h3>
+        </div>
+        {# Build a map from global artifact DB id → per-case 1-based number #}
+        {% set artifact_map = {} %}
+        {% set artifact_path_map = {} %}
+        {% for art in artifacts %}
+            {% set _ = artifact_map.update({art.id: loop.index}) %}
+            {% set _ = artifact_path_map.update({art.id: art.file_path}) %}
+        {% endfor %}
+        {% if custody_log %}
+        <div style="max-height: 400px; overflow-y: auto;">
+            {% for entry in custody_log %}
+            <div style="padding: 12px 0; border-bottom: 1px solid var(--border-color); display: flex; gap: 16px;">
+                <div class="color-{{ 'collected' if entry.action == 'collected' else 'analyzed' }}" style="flex-shrink: 0;">
+                    <i class="fa-solid {% if entry.action == 'collected' %}fa-download{% else %}fa-microscope{% endif %}"></i>
+                </div>
+                <div>
+                    <div style="display: flex; gap: 8px; align-items: baseline;">
+                        <strong>{{ entry.action|upper }}</strong>
+                        <span class="meta-text">{{ entry.performed_at }}</span>
+                    </div>
+                    <p class="text-muted" style="font-size: 0.9rem;">Artifact #{{ artifact_map.get(entry.artifact_id, entry.artifact_id) }} by <strong>{{ entry.performed_by }}</strong></p>
+                    {% if entry.notes %}
+                    <p class="text-muted meta-text" style="font-style: italic; margin-top: 4px;">
+                        {% if artifact_path_map.get(entry.artifact_id) %}
+                        <a href="{{ url_for('download_artifact', artifact_id=entry.artifact_id, case_id=case.case_id) }}" target="_blank" style="color: var(--accent-blue); text-decoration: underline; cursor: pointer;">"{{ entry.notes }}"</a>
+                        {% else %}
+                        "{{ entry.notes }}"
+                        {% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted">No custody records found.</p>
+        {% endif %}
+    </div>
+
+    <!-- Threat Intelligence (MISP) Section -->
+    <div class="card" id="threat-intel" style="grid-column: span 2;">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fa-solid fa-cloud-nodes text-muted"></i> Threat Intelligence (MISP)</h3>
+            <span class="badge badge-purple">Iteration 2</span>
+        </div>
+        <div style="padding: 16px;">
+            <p class="text-secondary" style="margin-bottom: 12px; font-size: 0.9rem;">Search for Indicators of Compromise (IPs, domains, hashes) across connected MISP instances.</p>
+            <form action="{{ url_for('analyze_url') }}" method="POST" style="display: flex; gap: 8px;">
+                <input type="hidden" name="case_id" value="{{ case.case_id }}">
+                <input type="text" name="ioc_value" class="filter-select" style="flex: 1; padding: 8px 12px;" placeholder="e.g. 1.2.3.4, malware.exe, or malicious-domain.com" required>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-search"></i> Search MISP
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Threat Alerts (Iteration 3 Placeholder) -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fa-solid fa-triangle-exclamation text-muted" style="color: var(--danger-red) !important;"></i> Detection Alerts</h3>
+            <span class="badge badge-red">{{ alerts|length }} Alert(s)</span>
+        </div>
+        
+        {% if alerts %}
+        <div style="max-height: 300px; overflow-y: auto;">
+            {% for alert in alerts %}
+            <div style="padding: 12px; border-bottom: 1px solid var(--border-color); display: flex; gap: 12px; align-items: flex-start;">
+                <div style="flex-shrink: 0; margin-top: 2px;">
+                    <i class="text-{{ alert.severity }} fa-solid fa-{% if alert.severity == 'high' %}circle-xmark{% elif alert.severity == 'medium' %}triangle-exclamation{% else %}circle-info{% endif %}"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 4px;">
+                        <strong style="color: var(--text-primary);">{{ alert.alert_type|title }}</strong>
+                        <span class="badge badge-{% if alert.severity == 'high' %}red{% elif alert.severity == 'medium' %}orange{% else %}blue{% endif %}" style="font-size: 0.7rem;">{{ alert.severity }}</span>
+                        {% if alert.mitre_technique %}
+                        <span class="badge badge-purple" style="font-size: 0.7rem;">{{ alert.mitre_technique }}</span>
+                        {% endif %}
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">{{ alert.description }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 40px 0; color: var(--text-secondary); opacity: 0.6;">
+            <i class="fa-solid fa-shield-check" style="font-size: 2rem; margin-bottom: 12px; color: var(--success-green);"></i>
+            <p>No threats detected.</p>
+            <p style="font-size: 0.8rem; margin-top: 8px;">Run ML Anomaly or Anti-Forensics scans to populate alerts.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Blockchain Chain of Custody (Iteration 3) -->
+    <div class="card" id="blockchain">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fa-solid fa-link text-muted" style="color: var(--info-blue) !important;"></i> Blockchain Chain of Custody</h3>
+            <span class="badge badge-blue" id="blockchain-badge">Checking…</span>
+        </div>
+        
+        <div id="blockchain-content" style="padding: 16px;">
+            <div style="text-align: center; padding: 40px 0;">
+                <span class="spinner"></span>
+                <p style="color: var(--text-secondary); margin-top: 12px;">Loading blockchain ledger…</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function verifyHash(artifactId, caseId) {
+        const btn = document.getElementById(`btn-${artifactId}`);
+        const res = document.getElementById(`res-${artifactId}`);
+        
+        btn.disabled = true;
+        res.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-muted"></i> Checking...';
+        res.style.color = 'var(--text-secondary)';
+        
+        try {
+            const response = await fetch(`/api/verify/${artifactId}?case_id=${caseId}`);
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                res.innerHTML = '<i class="fa-solid fa-check"></i> INTACT';
+                res.style.color = 'var(--success-green)';
+            } else if (data.status === 'tampered' || data.status === 'error') {
+                res.innerHTML = '<i class="fa-solid fa-xmark"></i> ' + (data.status === 'tampered' ? 'TAMPERED' : 'ERROR: ' + data.message);
+                res.style.color = 'var(--danger-red)';
+            } else if (data.status === 'warning') {
+                res.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> DENIED (Requires Root)';
+                res.style.color = 'var(--warning-yellow)';
+            }
+        } catch (error) {
+            res.innerHTML = '<i class="fa-solid fa-xmark"></i> Network Error';
+            res.style.color = 'var(--danger-red)';
+        } finally {
+            btn.disabled = false;
+        }
+    }
+</script>
+<script>
+    let currentPageArtifact = 1;
+    const itemsPerPageArtifact = 10;
+    let filteredArtifactRows = [];
+
+    function renderArtifactPage() {
+        const tbody = document.getElementById('artifacts-table').querySelector('tbody');
+        const trs = tbody.getElementsByTagName('tr');
+        
+        // Hide all rows globally
+        for (let i = 0; i < trs.length; i++) {
+            trs[i].style.display = "none";
+        }
+        
+        // Determine start and end index for this page based on filtered array
+        const start = (currentPageArtifact - 1) * itemsPerPageArtifact;
+        const end = start + itemsPerPageArtifact;
+        
+        for (let i = start; i < end && i < filteredArtifactRows.length; i++) {
+            filteredArtifactRows[i].style.display = "";
+        }
+        
+        // Update pagination UI text and buttons
+        const total = filteredArtifactRows.length;
+        const displayedCount = Math.min(itemsPerPageArtifact, total - start);
+        const startDisplay = displayedCount > 0 ? start + 1 : 0;
+        document.getElementById('artifacts-page-info').innerHTML = `Showing ${startDisplay} to ${start + displayedCount} of ${total} artifacts`;
+        
+        document.getElementById('btn-prev-artifact').disabled = currentPageArtifact === 1;
+        document.getElementById('btn-next-artifact').disabled = end >= total;
+    }
+
+    function changeArtifactPage(delta) {
+        currentPageArtifact += delta;
+        renderArtifactPage();
+    }
+
+    function toggleArtifacts() {
+        const container = document.getElementById('artifacts-table-container');
+        const btn = document.getElementById('toggle-artifacts-btn');
+        
+        if (container.style.display === 'none') {
+            container.style.display = 'block';
+            btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Hide Artifacts';
+            filterArtifactsAdvanced(); // Init pagination on open
+        } else {
+            container.style.display = 'none';
+            btn.innerHTML = '<i class="fa-solid fa-eye"></i> View Artifacts';
+        }
+    }
+
+    function filterArtifactsAdvanced() {
+        const textInput = document.getElementById('artifact-search').value.toLowerCase();
+        const typeInput = document.getElementById('artifact-type-filter').value.toLowerCase();
+        
+        const tbody = document.getElementById('artifacts-table').querySelector('tbody');
+        const trs = tbody.getElementsByTagName('tr');
+        
+        filteredArtifactRows = [];
+
+        for (let i = 0; i < trs.length; i++) {
+            const row = trs[i];
+            const textContent = row.textContent || row.innerText;
+            const typeCol = row.getElementsByTagName('td')[1]?.textContent.toLowerCase() || "";
+            
+            // Map common badges to code
+            let rowType = "";
+            if(typeCol.includes('evidence')) rowType = 'offline_evidence';
+            if(typeCol.includes('network')) rowType = 'network';
+            if(typeCol.includes('config')) rowType = 'config_file';
+            if(typeCol.includes('log')) rowType = 'journal_log';
+            
+            let matchText = textContent.toLowerCase().indexOf(textInput) > -1;
+            let matchType = typeInput === "" || rowType.includes(typeInput);
+
+            if (matchText && matchType) {
+                 filteredArtifactRows.push(row);
+            }
+        }
+        
+        currentPageArtifact = 1; // Reset to page 1 on new filter
+        renderArtifactPage();
+    }
+</script>
+<script>
+    function toggleAll(source) {
+        const checkboxes = document.querySelectorAll('.collector-cb');
+        checkboxes.forEach(cb => cb.checked = source.checked);
+    }
+
+    // Keep "Select All" in sync when individual boxes change
+    document.querySelectorAll('.collector-cb').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const all = document.querySelectorAll('.collector-cb');
+            const checked = document.querySelectorAll('.collector-cb:checked');
+            document.getElementById('collect-all').checked = (all.length === checked.length);
+        });
+    });
+</script>
+
+{% if parsing_done %}
+<script>
+    // Parsed Data Pagination State
+    let currentPage = 1;
+
+    async function fetchParsedData(page = 1) {
+        currentPage = page;
+        const source  = document.getElementById('parsed-source-filter').value;
+        const cmd     = document.getElementById('parsed-cmd-filter').value;
+        const search  = document.getElementById('parsed-search').value;
+        const perPage = document.getElementById('parsed-per-page').value;
+        const order   = document.getElementById('parsed-order').value;
+        const caseId  = encodeURIComponent("{{ case.case_id | safe }}");
+
+        const loading = document.getElementById('parsed-loading');
+        const tbody   = document.getElementById('parsed-tbody');
+        const prevBtn = document.getElementById('btn-prev-page');
+        const nextBtn = document.getElementById('btn-next-page');
+        const pageInfo= document.getElementById('parsed-page-info');
+
+        loading.style.display = 'flex';
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+
+        try {
+            const queryParams = new URLSearchParams({
+                page: page,
+                per_page: perPage,
+                source: source,
+                command_type: cmd,
+                search: search
+            });
+            // Sort client-side after fetch (backend returns newest-first by default)
+            const _sortOrder = order;
+
+            const res = await fetch(`/api/parsed/${caseId}?${queryParams.toString()}`);
+            const data = await res.json();
+
+            if (data.status === 'success') {
+                tbody.innerHTML = '';
+
+                if (data.records.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text-muted);">No records found matching filters.</td></tr>';
+                    pageInfo.textContent = 'Showing 0 records';
+                } else {
+                    let records = data.records;
+                    // Apply client-side sort
+                    if (_sortOrder === 'asc') {
+                        records = records.slice().sort((a, b) => (a.timestamp || '').localeCompare(b.timestamp || ''));
+                    } else {
+                        records = records.slice().sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+                    }
+
+                    records.forEach(r => {
+                        const tr = document.createElement('tr');
+
+                        let tsStr = r.timestamp || '—';
+                        if (tsStr.includes('T')) tsStr = tsStr.replace('T', ' ').substring(0, 19);
+
+                        const badgeMap = { auth_log: 'badge-yellow', syslog: 'badge-blue', bash_history: 'badge-green', network: 'badge-purple' };
+                        const bClass = badgeMap[r.source] || 'badge-blue';
+
+                        tr.innerHTML = `
+                            <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;white-space:nowrap;">${tsStr}</td>
+                            <td><span class="badge ${bClass}">${r.source}</span></td>
+                            <td class="cell-truncate" style="max-width:130px;" title="${r.command_type || ''}">${r.command_type || '—'}</td>
+                            <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;word-break:break-all;">${r.raw_message || '—'}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+
+                    pageInfo.textContent = `Page ${data.page} of ${data.total_pages} — ${data.total_filtered} record(s) found`;
+                    if (data.page > 1) prevBtn.disabled = false;
+                    if (data.page < data.total_pages) nextBtn.disabled = false;
+                }
+            } else {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--danger-red);">Error: ${data.message}</td></tr>`;
+                pageInfo.textContent = 'Error loading data';
+            }
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--danger-red);">Network Error: ${err.message}</td></tr>`;
+            pageInfo.textContent = 'Error loading data';
+        } finally {
+            loading.style.display = 'none';
+        }
+    }
+
+    function changePage(delta) {
+        fetchParsedData(currentPage + delta);
+    }
+
+    // Load blockchain ledger data
+    async function loadBlockchainData() {
+        const caseId = encodeURIComponent("{{ case.case_id | safe }}");
+        try {
+            const response = await fetch(`/api/blockchain/${caseId}`);
+            const data = await response.json();
+            
+            const badge = document.getElementById('blockchain-badge');
+            const content = document.getElementById('blockchain-content');
+            
+            if (data.status === 'success' && data.ledger.length > 0) {
+                badge.innerHTML = `<i class="fa-solid fa-cube"></i> ${data.total_artifacts} Artifacts Logged`;
+                badge.style.background = 'rgba(34, 197, 94, 0.2)';
+                badge.style.color = 'var(--success-green)';
+                
+                let html = '<div style="max-height: 400px; overflow-y: auto;">';
+                data.ledger.forEach((entry, idx) => {
+                    const payload = entry.payload;
+                    const txId = entry.tx_id;
+                    const timestamp = entry.timestamp;
+                    
+                    html += `
+                        <div style="padding: 12px; border-bottom: 1px solid var(--border-color);">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 6px;">
+                                <strong style="color: var(--success-green);">${payload.artifact_name}</strong>
+                                <span class="badge badge-green" style="font-size: 0.7rem;">Logged</span>
+                            </div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary);">
+                                <div><strong>Hash:</strong> <code style="background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 0.75rem;">${payload.sha256_hash.substring(0, 24)}…</code></div>
+                                <div style="margin-top: 4px;"><strong>TX ID:</strong> <code style="background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 0.75rem;">${txId.substring(0, 20)}…</code></div>
+                                <div style="margin-top: 4px; color: var(--text-tertiary);">${timestamp}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                content.innerHTML = html;
+            } else if (data.total_entries === 0) {
+                badge.innerHTML = 'Not Yet Logged';
+                badge.style.background = 'rgba(107, 114, 128, 0.2)';
+                badge.style.color = 'var(--text-secondary)';
+                
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 40px 0; color: var(--text-secondary); opacity: 0.6;">
+                        <i class="fa-solid fa-cube" style="font-size: 2rem; margin-bottom: 12px; opacity: 0.4;"></i>
+                        <p>No artifacts logged to blockchain yet.</p>
+                        <p style="font-size: 0.8rem; margin-top: 8px;">Click "Log to Blockchain" button above to establish immutable chain of custody.</p>
+                    </div>
+                `;
+            } else {
+                throw new Error(data.message || 'Failed to load blockchain data');
+            }
+        } catch (error) {
+            const content = document.getElementById('blockchain-content');
+            content.innerHTML = `
+                <div style="text-align: center; padding: 40px 0; color: var(--danger-red);">
+                    <i class="fa-solid fa-circle-exclamation" style="font-size: 2rem; margin-bottom: 12px;"></i>
+                    <p>Error loading blockchain data.</p>
+                    <p style="font-size: 0.8rem; margin-top: 8px;">${error.message}</p>
+                </div>
+            `;
+        }
+    }
+    
+    // Initial load
+    document.addEventListener("DOMContentLoaded", () => {
+        fetchParsedData(1);
+        loadBlockchainData();
+        
+        // Add enter key support for search
+        document.getElementById('parsed-search').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                fetchParsedData(1);
+            }
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}

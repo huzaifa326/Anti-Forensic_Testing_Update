@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberForensX — Digital Forensics Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Sidebar navigation -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-icon">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                    <h2>CyberForensX</h2>
+                    <p>Digital Forensics Platform</p>
+                </div>
+            </div>
+        </div>
+        <div class="sidebar-nav">
+            <span class="nav-section-label">Workspace</span>
+            <a href="/" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">
+                <i class="fa-solid fa-house"></i> Dashboard
+            </a>
+
+            <span class="nav-section-label">Analysis</span>
+            {% if case %}
+            <form id="scan-form" method="POST" action="{{ url_for('scan_all_vt', case_id=case.case_id) }}" style="display:none;"></form>
+            <a href="#" class="nav-link" onclick="if(confirm('Run VirusTotal hash scan on all artifacts? This may take some time.')) document.getElementById('scan-form').submit(); return false;">
+                <i class="fa-solid fa-file-shield"></i> File &amp; Hash Scan
+            </a>
+            <a href="{{ url_for('view_case', case_id=case.case_id) }}#threat-intel" class="nav-link">
+                <i class="fa-solid fa-globe"></i> IOC / MISP Search
+            </a>
+            <a href="{{ url_for('view_timeline', case_id=case.case_id) }}" class="nav-link {% if request.endpoint == 'view_timeline' %}active{% endif %}">
+                <i class="fa-solid fa-timeline"></i> Forensic Timeline
+            </a>
+            {% else %}
+            <a href="#" class="nav-link" onclick="alert('Select a case from the dashboard first to perform analysis.')">
+                <i class="fa-solid fa-file-shield"></i> File &amp; Hash Scan
+            </a>
+            <a href="#" class="nav-link" onclick="alert('Select a case from the dashboard first to search IOCs.')">
+                <i class="fa-solid fa-globe"></i> IOC / MISP Search
+            </a>
+            <a href="#" class="nav-link" onclick="alert('Select a case from the dashboard first to view the timeline.')">
+                <i class="fa-solid fa-timeline"></i> Forensic Timeline
+            </a>
+            {% endif %}
+
+            <span class="nav-section-label">Upcoming</span>
+            <a href="#" class="nav-link" onclick="alert('ML Anomaly Detection (Isolation Forest) is an Iteration 3 feature.')">
+                <i class="fa-solid fa-brain"></i> ML Anomaly Scan
+            </a>
+            {% if case %}
+            <a href="{{ url_for('view_case', case_id=case.case_id) }}#blockchain" class="nav-link {% if request.endpoint == 'view_case' %}active{% endif %}">
+                <i class="fa-solid fa-link"></i> Hyperledger Fabric
+            </a>
+            {% else %}
+            <a href="{{ url_for('index') }}" class="nav-link">
+                <i class="fa-solid fa-link"></i> Hyperledger Fabric
+            </a>
+            {% endif %}
+        </div>
+        <div class="sidebar-footer">
+            <span class="version-tag"><i class="fa-solid fa-code-branch"></i> Iteration 3</span>
+        </div>
+    </nav>
+
+    <!-- Main Workspace -->
+    <main class="main-content">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="search-bar">
+                <i class="fa-solid fa-magnifying-glass text-muted" style="font-size:0.85rem;"></i>
+                <input type="text" placeholder="Search a URL, IP address, domain, or file hash…">
+            </div>
+            <div class="header-actions">
+                {% if g.user %}
+                <span style="margin-right: 15px; color: var(--text-color);">
+                    <i class="fa-solid fa-user"></i> {{ g.user.display_name or g.user.username }}
+                </span>
+                <a href="{{ url_for('logout') }}" class="action-btn" style="text-decoration: none;">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </a>
+                {% endif %}
+                <div class="status-dot" style="margin-left: 15px;">System Online</div>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="content-wrapper">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            <i class="fa-solid {% if category == 'success' %}fa-circle-check{% elif category == 'error' %}fa-triangle-exclamation{% else %}fa-circle-info{% endif %}"></i>
+                            <span class="alert-message">{{ message }}</span>
+                            <span class="alert-close" onclick="this.parentElement.remove()">&times;</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

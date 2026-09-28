@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card card-accent-blue" style="max-width: 450px; margin: 60px auto;">
+    <div class="card-header">
+        <div class="card-title"><i class="fa-solid fa-user-plus"></i> Create an Account</div>
+    </div>
+    <form method="POST" action="{{ url_for('signup') }}" style="padding: 10px;">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" class="form-control" placeholder="e.g. admin" required autocomplete="username">
+        </div>
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" class="form-control" placeholder="admin@cyberforensx.local" required autocomplete="email">
+        </div>
+        <div class="form-group">
+            <label for="display_name">Full Name</label>
+            <input type="text" id="display_name" name="display_name" class="form-control" placeholder="e.g. John Doe" autocomplete="name">
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" class="form-control" placeholder="Choose a strong password" required autocomplete="new-password">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px; justify-content: center; height: 42px;">
+            <i class="fa-solid fa-user-check"></i> Sign Up
+        </button>
+    </form>
+    <div style="text-align: center; margin-top: 10px; margin-bottom: 5px;">
+        <p class="meta-text" style="font-size: 0.9rem;">
+            Already have an account? <a href="{{ url_for('login') }}" style="color: var(--accent-light); font-weight: 500; text-decoration: none;">Login</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

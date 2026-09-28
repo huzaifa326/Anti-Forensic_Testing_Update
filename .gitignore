@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+*.db
+*.sqlite3
+storage/raw/
+storage/processed/
+evidence_output/
+*.lime
+.env
+venv/
+.vscode/

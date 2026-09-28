@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="section-header">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+        <div>
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+                <a href="{{ url_for('view_case', case_id=case.case_id) }}"
+                   style="color:var(--text-secondary);text-decoration:none;font-size:0.82rem;display:flex;align-items:center;gap:5px;">
+                    <i class="fa-solid fa-arrow-left"></i> Back to Case
+                </a>
+            </div>
+            <h1 class="page-title"><i class="fa-solid fa-timeline" style="color:#60a5fa;font-size:1.2rem;"></i> Forensic Timeline</h1>
+            <p class="page-subtitle">{{ case.case_id }} &mdash; {{ case.title }}</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding-top:4px;">
+            {% if timeline_meta.generated_at %}
+            <span class="badge badge-blue"><i class="fa-solid fa-clock"></i> Generated {{ timeline_meta.generated_at[:19] | replace('T',' ') }}</span>
+            {% endif %}
+            {% if timeline_meta.time_range.first %}
+            <span class="badge badge-purple" title="Time range of events">
+                <i class="fa-solid fa-calendar-range"></i>
+                {{ timeline_meta.time_range.first[:10] }} – {{ timeline_meta.time_range.last[:10] }}
+            </span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ─── Stat Row ──────────────────────────────────────────── -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom:20px;">
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-blue"><i class="fa-solid fa-layer-group"></i></div>
+        <div>
+            <div class="stat-value" style="color:#60a5fa;">{{ total_events }}</div>
+            <div class="stat-label">Total Events</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-purple"><i class="fa-solid fa-server"></i></div>
+        <div>
+            <div class="stat-value" style="color:#c084fc;">{{ timeline_meta.source_distribution.get('syslog', 0) }}</div>
+            <div class="stat-label">System Logs</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-green"><i class="fa-solid fa-key"></i></div>
+        <div>
+            <div class="stat-value" style="color:#4ade80;">{{ timeline_meta.source_distribution.get('auth_log', 0) }}</div>
+            <div class="stat-label">Auth Events</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-yellow"><i class="fa-solid fa-terminal"></i></div>
+        <div>
+            <div class="stat-value" style="color:#fbbf24;">{{ timeline_meta.source_distribution.get('bash_history', 0) }}</div>
+            <div class="stat-label">Bash Cmds</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-cyan"><i class="fa-solid fa-network-wired"></i></div>
+        <div>
+            <div class="stat-value" style="color:#22d3ee;">{{ timeline_meta.source_distribution.get('network', 0) }}</div>
+            <div class="stat-label">Network</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-red"><i class="fa-solid fa-skull-crossbones"></i></div>
+        <div>
+            <div class="stat-value" style="color:#f87171;">{{ timeline_meta.source_distribution.get('threat_intel', 0) }}</div>
+            <div class="stat-label">Threat Intel</div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Charts Section ────────────────────────────────────── -->
+<div class="grid-2" style="margin-bottom:20px; gap:20px;">
+    {% if timeline_meta.source_distribution %}
+    <div class="chart-container" style="margin-bottom:0;">
+        <div class="chart-title">
+            <i class="fa-solid fa-chart-pie" style="color:#60a5fa;"></i>
+            Event Distribution by Source
+        </div>
+        <div class="chart-wrapper" style="height:200px;">
+            <canvas id="sourceChart"></canvas>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if timeline_meta.activity_trend %}
+    <div class="chart-container" style="margin-bottom:0;">
+        <div class="chart-title">
+            <i class="fa-solid fa-chart-line" style="color:#c084fc;"></i>
+            Forensic Activity over Time
+        </div>
+        <div class="chart-wrapper" style="height:200px;">
+            <canvas id="activityChart"></canvas>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- ─── Filter Bar ────────────────────────────────────────── -->
+<div class="card" style="margin-bottom:16px;">
+    <div style="display:flex; gap:14px; align-items:flex-end; flex-wrap:wrap;">
+
+        <!-- Event Type Filter -->
+        <div class="filter-group">
+            <label><i class="fa-solid fa-filter"></i> Event Type</label>
+            <select id="event-filter" class="filter-select" onchange="filterTimeline()">
+                <option value="all">All Events</option>
+                <option value="system">System (Syslog)</option>
+                <option value="auth">Authentication</option>
+                <option value="bash">Bash History</option>
+                <option value="network">Network</option>
+                <option value="threat_intel">Threat Intel</option>
+            </select>
+        </div>
+
+        <!-- Search -->
+        <div class="filter-group" style="flex:1; min-width:180px;">
+            <label><i class="fa-solid fa-magnifying-glass"></i> Search</label>
+            <input type="text" id="event-search" class="filter-select" style="width:100%;"
+                   oninput="filterTimeline()" placeholder="Search messages, IPs, users…">
+        </div>
+
+        <!-- Logs per Page -->
+        <div class="filter-group">
+            <label><i class="fa-solid fa-list-ol"></i> Logs per Page</label>
+            <select id="per-page-select" class="filter-select" onchange="applyPageFilters()">
+                <option value="25"  {% if per_page == 25  %}selected{% endif %}>25 logs</option>
+                <option value="50"  {% if per_page == 50  %}selected{% endif %}>50 logs</option>
+                <option value="100" {% if per_page == 100 %}selected{% endif %}>100 logs</option>
+                <option value="200" {% if per_page == 200 %}selected{% endif %}>200 logs</option>
+                <option value="500" {% if per_page == 500 %}selected{% endif %}>500 logs</option>
+            </select>
+        </div>
+
+        <!-- Sort Order -->
+        <div class="filter-group">
+            <label><i class="fa-solid fa-arrow-up-wide-short"></i> Sort Order</label>
+            <select id="order-select" class="filter-select" onchange="applyPageFilters()">
+                <option value="desc" {% if order == 'desc' %}selected{% endif %}>⬇ Newest First</option>
+                <option value="asc"  {% if order == 'asc'  %}selected{% endif %}>⬆ Oldest First</option>
+            </select>
+        </div>
+
+        <!-- Reset -->
+        <div class="filter-group" style="justify-content:flex-end;">
+            <label style="visibility:hidden;">.</label>
+            <button class="btn btn-secondary btn-sm" onclick="resetFilters()">
+                <i class="fa-solid fa-rotate-left"></i> Reset
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Timeline Table ────────────────────────────────────── -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fa-solid fa-timeline"></i> Event Log
+        </div>
+        <span class="meta-text" id="visible-count">
+            Showing {{ events|length }} of {{ total_events }} total &mdash; Page {{ page }}/{{ total_pages }}
+        </span>
+    </div>
+    <div style="overflow-x:auto;">
+        {% if events %}
+        <table class="data-table" id="timeline-table">
+            <thead>
+                <tr>
+                    <th style="width:3%;">#</th>
+                    <th style="width:16%;">Timestamp</th>
+                    <th style="width:9%;">Type</th>
+                    <th style="width:9%;">Source</th>
+                    <th style="width:9%;">User</th>
+                    <th style="width:9%;">IP Address</th>
+                    <th>Message</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in events %}
+                <tr class="timeline-row" data-event-type="{{ event.event_type|default('unknown') }}">
+                    <td class="meta-text">{{ ((page - 1) * per_page) + loop.index }}</td>
+                    <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;white-space:nowrap;">
+                        {{ event.timestamp[:19] if event.timestamp else '—' }}
+                    </td>
+                    <td>
+                        {% set etype = event.event_type|default('unknown') %}
+                        {% if etype == 'syslog' or etype == 'system' %}
+                            <span class="badge badge-purple">System</span>
+                        {% elif etype == 'auth_log' or etype == 'auth' %}
+                            <span class="badge badge-green">Auth</span>
+                        {% elif etype == 'bash_history' or etype == 'bash' %}
+                            <span class="badge badge-yellow">Bash</span>
+                        {% elif etype == 'network' %}
+                            <span class="badge badge-cyan">Network</span>
+                        {% elif etype == 'threat_intel' %}
+                            <span class="badge badge-red">Threat</span>
+                        {% else %}
+                            <span class="badge">{{ etype }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="meta-text">{{ event.source|default('—') }}</td>
+                    <td>{{ event.user_id|default('—') }}</td>
+                    <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;">
+                        {{ event.origin_ip|default('—') }}
+                    </td>
+                    <td style="font-size:0.84rem;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                        title="{{ event.raw_message|default(event.message|default('')) }}">
+                        {{ event.raw_message|default(event.message|default('—')) }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        {% if total_pages > 1 %}
+        <div class="pagination-controls">
+            <div class="meta-text">
+                Page <strong>{{ page }}</strong> of <strong>{{ total_pages }}</strong>
+                &nbsp;·&nbsp; {{ events|length }} events shown
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                {% if page > 1 %}
+                <a class="btn btn-secondary btn-sm"
+                   href="{{ url_for('view_timeline', case_id=case.case_id, page=1, per_page=per_page, order=order) }}">
+                    <i class="fa-solid fa-angles-left"></i> First
+                </a>
+                <a class="btn btn-secondary btn-sm"
+                   href="{{ url_for('view_timeline', case_id=case.case_id, page=page-1, per_page=per_page, order=order) }}">
+                    <i class="fa-solid fa-chevron-left"></i> Prev
+                </a>
+                {% else %}
+                <button class="btn btn-secondary btn-sm" disabled><i class="fa-solid fa-angles-left"></i> First</button>
+                <button class="btn btn-secondary btn-sm" disabled><i class="fa-solid fa-chevron-left"></i> Prev</button>
+                {% endif %}
+
+                {% if page < total_pages %}
+                <a class="btn btn-secondary btn-sm"
+                   href="{{ url_for('view_timeline', case_id=case.case_id, page=page+1, per_page=per_page, order=order) }}">
+                    Next <i class="fa-solid fa-chevron-right"></i>
+                </a>
+                <a class="btn btn-secondary btn-sm"
+                   href="{{ url_for('view_timeline', case_id=case.case_id, page=total_pages, per_page=per_page, order=order) }}">
+                    Last <i class="fa-solid fa-angles-right"></i>
+                </a>
+                {% else %}
+                <button class="btn btn-secondary btn-sm" disabled>Next <i class="fa-solid fa-chevron-right"></i></button>
+                <button class="btn btn-secondary btn-sm" disabled>Last <i class="fa-solid fa-angles-right"></i></button>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <p>No timeline events available.</p>
+            <p class="hint">Run <strong>Parse Artifacts</strong> from the case view first, then revisit this page.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ─── Event Distribution Chart ───────────────────────────────
+const rawDist = {{ (timeline_meta.source_distribution | default({})) | tojson }};
+if (Object.keys(rawDist).length > 0 && document.getElementById('sourceChart')) {
+    const labelMap = { 
+        syslog: 'System Logs', 
+        auth_log: 'Auth Events', 
+        bash_history: 'Bash Cmds', 
+        network: 'Network', 
+        threat_intel: 'Threat Intel' 
+    };
+    const colorMap = {
+        syslog: '#c084fc',
+        auth_log: '#4ade80',
+        bash_history: '#fbbf24',
+        network: '#22d3ee',
+        threat_intel: '#f87171'
+    };
+    const sortedKeys = Object.keys(rawDist).sort();
+    const labels = sortedKeys.map(k => labelMap[k] || k);
+    const data = sortedKeys.map(k => rawDist[k]);
+    const colors = sortedKeys.map(k => colorMap[k] || '#8b949e');
+
+    new Chart(document.getElementById('sourceChart'), {
+        type: 'doughnut',
+        data: {
+            labels,
+            datasets: [{
+                data: data,
+                backgroundColor: colors,
+                borderWidth: 0,
+                hoverOffset: 12
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'right', labels: { color: '#8b949e', font: { size: 11 } } } },
+            cutout: '70%'
+        }
+    });
+}
+
+// ─── Activity Trend Line Chart ──────────────────────────────
+const rawTrend = {{ (timeline_meta.activity_trend | default({})) | tojson }};
+if (Object.keys(rawTrend).length > 0 && document.getElementById('activityChart')) {
+    new Chart(document.getElementById('activityChart'), {
+        type: 'line',
+        data: {
+            labels: Object.keys(rawTrend).map(k => k.substring(11, 16)), // "HH:00"
+            datasets: [{
+                label: 'Events',
+                data: Object.values(rawTrend),
+                borderColor: '#c084fc',
+                backgroundColor: 'rgba(192,132,252,0.15)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 3,
+                pointHoverRadius: 6,
+                borderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: '#8b949e' } },
+                y: { beginAtZero: true, grid: { color: 'rgba(48,54,61,0.5)' }, ticks: { color: '#8b949e', precision: 0 } }
+            }
+        }
+    });
+}
+
+// ─── Client-side Row Filter ─────────────────────────────────
+function filterTimeline() {
+    const filter = document.getElementById('event-filter').value;
+    const search = document.getElementById('event-search').value.toLowerCase().trim();
+    const rows   = document.querySelectorAll('.timeline-row');
+    let visible  = 0;
+
+    rows.forEach(row => {
+        const type = row.getAttribute('data-event-type');
+        const text = row.textContent.toLowerCase();
+        const typeOk   = (filter === 'all' || type === filter);
+        const searchOk = (!search || text.includes(search));
+
+        if (typeOk && searchOk) {
+            row.style.display = '';
+            visible++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    document.getElementById('visible-count').textContent =
+        `Showing ${visible} / {{ events|length }} on this page`;
+}
+
+// ─── Server-side Page Filters (per_page + order) ────────────
+function applyPageFilters() {
+    const pp    = document.getElementById('per-page-select').value;
+    const order = document.getElementById('order-select').value;
+    const caseId = "{{ case.case_id }}";
+    window.location.href = `/case/${caseId}/timeline?page=1&per_page=${pp}&order=${order}`;
+}
+
+function resetFilters() {
+    document.getElementById('event-filter').value = 'all';
+    document.getElementById('event-search').value = '';
+    filterTimeline();
+}
+</script>
+{% endblock %}

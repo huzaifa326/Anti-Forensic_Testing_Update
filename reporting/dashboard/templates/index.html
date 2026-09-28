@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-section">
+    <h1>Dashboard</h1>
+    <p class="text-muted">Overview of all forensic investigations and artifacts.</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 2.5fr; gap: 24px; margin-top: 24px;">
+    <!-- Create New Case Card -->
+    <div class="card">
+        <div class="card-header" style="flex-direction: column; align-items: flex-start; gap: 12px;">
+            <h3 class="card-title" style="margin: 0;"><i class="fa-solid fa-folder-plus text-muted"></i> New Investigation</h3>
+            <!-- Mode Toggle Bar -->
+            <div style="display: flex; background: rgba(255,255,255,0.05); padding: 3px; border-radius: 6px; border: 1px solid var(--border-color); width: 100%;">
+                <button id="btnTabCreate" type="button" class="btn btn-sm" style="flex: 1; border: none; font-size: 0.8rem; padding: 6px; border-radius: 4px; background: var(--primary-color, #2563eb); color: white; transition: all 0.2s;"
+                        onclick="switchInvestigationTab('create')">
+                    <i class="fa-solid fa-plus-circle"></i> Create Case
+                </button>
+                <button id="btnTabImport" type="button" class="btn btn-sm" style="flex: 1; border: none; font-size: 0.8rem; padding: 6px; border-radius: 4px; background: transparent; color: var(--text-secondary); transition: all 0.2s;"
+                        onclick="switchInvestigationTab('import')">
+                    <i class="fa-solid fa-usb"></i> Import USB Case
+                </button>
+            </div>
+        </div>
+
+        <!-- Create Case Form View -->
+        <div id="tabContentCreate">
+            <form action="{{ url_for('new_case') }}" method="POST" id="newCaseForm" novalidate autocomplete="off">
+                <div class="form-group">
+                    <label for="case_id">Case ID</label>
+                    <input type="text" id="case_id" name="case_id" class="form-control"
+                           placeholder="e.g. CASE-2026-002"
+                           required autocomplete="off"
+                           minlength="6" maxlength="50"
+                           pattern="^CASE-[A-Za-z0-9\-_]+$"
+                           title="Must start with CASE- followed by letters, numbers, hyphens, or underscores">
+                    <span class="field-error" id="error-case_id"></span>
+                </div>
+                <div class="form-group">
+                    <label for="title">Title</label>
+                    <input type="text" id="title" name="title" class="form-control"
+                           placeholder="e.g. Unauthorized Access"
+                           required autocomplete="off"
+                           minlength="3" maxlength="100"
+                           pattern="^[A-Za-z0-9 \-_.,&'()]+$"
+                           title="Only letters, numbers, spaces, and basic punctuation allowed">
+                    <span class="field-error" id="error-title"></span>
+                </div>
+                <div class="form-group">
+                    <label for="investigator">Investigator</label>
+                    <input type="text" id="investigator" name="investigator" class="form-control"
+                           placeholder="Your Name"
+                           required autocomplete="off"
+                           minlength="2" maxlength="60"
+                           pattern="^[A-Za-z .'\-]+$"
+                           title="Only letters, spaces, dots, apostrophes, and hyphens allowed">
+                    <span class="field-error" id="error-investigator"></span>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">Create Case</button>
+            </form>
+        </div>
+
+        <!-- Import from USB View -->
+        <div id="tabContentImport" style="display: none;">
+            <form action="{{ url_for('import_from_usb') }}" method="POST" id="usbImportForm" style="margin: 0;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label style="font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; display: block;">Case ID Naming Option:</label>
+                    <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.82rem; background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0;">
+                            <input type="radio" name="name_option" value="original" checked onchange="toggleCustomCaseInput(false)">
+                            <span><strong>Keep Original Name</strong> <span style="color: var(--text-secondary); font-size: 0.75rem;">(Name set during triage)</span></span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0;">
+                            <input type="radio" name="name_option" value="custom" onchange="toggleCustomCaseInput(true)">
+                            <span><strong>Change Case Name</strong> <span style="color: var(--text-secondary); font-size: 0.75rem;">(Specify custom Case ID)</span></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="customCaseGroup" class="form-group" style="display: none; margin-bottom: 10px;">
+                    <label for="custom_case_id" style="font-size: 0.8rem;">Custom Case ID</label>
+                    <input type="text" id="custom_case_id" name="custom_case_id" class="form-control"
+                           placeholder="e.g. CASE-2026-003" style="font-size: 0.85rem;" autocomplete="off">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="usb_path" style="font-size: 0.8rem;">USB Directory (Optional)</label>
+                    <input type="text" id="usb_path" name="usb_path" class="form-control"
+                           placeholder="Leave empty for auto-detect" style="font-size: 0.85rem;" autocomplete="off">
+                </div>
+
+                <button type="submit" class="btn btn-outline" style="width: 100%; font-size: 0.85rem; margin-top: 8px;">
+                    <i class="fa-solid fa-file-import"></i> Import Case from USB
+                </button>
+            </form>
+            <p style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 8px; text-align: center;">
+                Auto-scans connected USB drives or specified evidence directory.
+            </p>
+        </div>
+
+        <script>
+        function switchInvestigationTab(tab) {
+            const btnCreate = document.getElementById('btnTabCreate');
+            const btnImport = document.getElementById('btnTabImport');
+            const contentCreate = document.getElementById('tabContentCreate');
+            const contentImport = document.getElementById('tabContentImport');
+
+            if (tab === 'create') {
+                btnCreate.style.background = 'var(--primary-color, #2563eb)';
+                btnCreate.style.color = 'white';
+                btnImport.style.background = 'transparent';
+                btnImport.style.color = 'var(--text-secondary)';
+
+                contentCreate.style.display = 'block';
+                contentImport.style.display = 'none';
+            } else {
+                btnImport.style.background = 'var(--primary-color, #2563eb)';
+                btnImport.style.color = 'white';
+                btnCreate.style.background = 'transparent';
+                btnCreate.style.color = 'var(--text-secondary)';
+
+                contentCreate.style.display = 'none';
+                contentImport.style.display = 'block';
+            }
+        }
+        function toggleCustomCaseInput(show) {
+            const group = document.getElementById('customCaseGroup');
+            if (group) {
+                group.style.display = show ? 'block' : 'none';
+                const input = document.getElementById('custom_case_id');
+                if (show && input) input.focus();
+            }
+        }
+        </script>
+    </div>
+
+    <!-- Recent Cases List (Takes up 2 columns) -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fa-solid fa-list-ul text-muted"></i> Active Cases</h3>
+            <span class="badge badge-blue">{{ cases|length }} Total</span>
+        </div>
+        
+        {% if cases %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Case ID</th>
+                        <th>Title</th>
+                        <th>Investigator</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for case in cases %}
+                    <tr>
+                        <td><strong>{{ case.case_id }}</strong></td>
+                        <td>{{ case.title }}</td>
+                        <td>{{ case.investigator }}</td>
+                        <td><span class="badge badge-{% if case.status == 'open' %}green{% else %}yellow{% endif %}">{{ case.status }}</span></td>
+                        <td class="meta-text">{{ case.created_at[:19] | replace('T', ' ') }}</td>
+                        <td>
+                            <select class="form-control" style="padding: 4px 8px; font-size: 0.82rem; height: 30px; min-width: 110px; cursor: pointer;"
+                                    onchange="handleCaseAction(this, '{{ case.case_id }}')">
+                                <option value="" disabled selected>Actions ▾</option>
+                                <option value="view">View</option>
+                                {% if case.status != 'closed' %}
+                                <option value="close">Close</option>
+                                {% endif %}
+                                <option value="delete">Delete</option>
+                            </select>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 40px 0; color: var(--text-secondary);">
+            <i class="fa-solid fa-folder-open" style="font-size: 3rem; margin-bottom: 16px; opacity: 0.5;"></i>
+            <p>No active cases found.</p>
+            <p style="font-size: 0.85rem;">Create a new case or run the CLI collector to get started.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Case Activity Log -->
+<div class="card" style="margin-top: 24px;">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-clock-rotate-left text-muted"></i> Case Activity Log</h3>
+        <span class="badge badge-blue">Recent Activity</span>
+    </div>
+    {% if activity_log %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Case ID</th>
+                    <th>Action</th>
+                    <th>Performed By</th>
+                    <th>Date &amp; Time</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in activity_log %}
+                <tr>
+                    <td><strong>{{ entry.case_id }}</strong></td>
+                    <td>
+                        {% if entry.action == 'opened' %}
+                        <span class="badge badge-green"><i class="fa-solid fa-folder-open"></i> Opened</span>
+                        {% elif entry.action == 'closed' %}
+                        <span class="badge badge-yellow"><i class="fa-solid fa-folder-closed"></i> Closed</span>
+                        {% elif entry.action == 'deleted' %}
+                        <span class="badge badge-red"><i class="fa-solid fa-trash"></i> Deleted</span>
+                        {% else %}
+                        <span class="badge badge-blue">{{ entry.action }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ entry.performed_by }}</td>
+                    <td class="meta-text">{{ entry.performed_at[:19] | replace('T', ' ') }}</td>
+                    <td class="meta-text">{{ entry.notes or '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 40px 0; color: var(--text-secondary);">
+        <i class="fa-solid fa-clock-rotate-left" style="font-size: 3rem; margin-bottom: 16px; opacity: 0.5;"></i>
+        <p>No activity recorded yet.</p>
+        <p style="font-size: 0.85rem;">Activities will appear here when cases are opened, closed, or deleted.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+(function() {
+    const rules = {
+        case_id: {
+            pattern: /^CASE-[A-Za-z0-9\-_]+$/,
+            min: 6, max: 50,
+            empty: 'Case ID is required.',
+            invalid: 'Must start with CASE- (e.g. CASE-2026-002).',
+            length: 'Must be 6–50 characters.'
+        },
+        title: {
+            pattern: /^[A-Za-z0-9 \-_.,&'()]+$/,
+            min: 3, max: 100,
+            empty: 'Title is required.',
+            invalid: 'Only letters, numbers, spaces, and basic punctuation.',
+            length: 'Must be 3–100 characters.'
+        },
+        investigator: {
+            pattern: /^[A-Za-z .'\-]+$/,
+            min: 2, max: 60,
+            empty: 'Investigator name is required.',
+            invalid: 'Only letters, spaces, dots, apostrophes, and hyphens.',
+            length: 'Must be 2–60 characters.'
+        }
+    };
+
+    function validateField(input) {
+        const r = rules[input.id];
+        const err = document.getElementById('error-' + input.id);
+        const val = input.value.trim();
+
+        if (!val) {
+            err.textContent = r.empty;
+            input.classList.add('form-control-invalid');
+            input.classList.remove('form-control-valid');
+            return false;
+        }
+        if (val.length < r.min || val.length > r.max) {
+            err.textContent = r.length;
+            input.classList.add('form-control-invalid');
+            input.classList.remove('form-control-valid');
+            return false;
+        }
+        if (!r.pattern.test(val)) {
+            err.textContent = r.invalid;
+            input.classList.add('form-control-invalid');
+            input.classList.remove('form-control-valid');
+            return false;
+        }
+        err.textContent = '';
+        input.classList.remove('form-control-invalid');
+        input.classList.add('form-control-valid');
+        return true;
+    }
+
+    Object.keys(rules).forEach(function(id) {
+        var input = document.getElementById(id);
+        input.addEventListener('input', function() { validateField(input); });
+        input.addEventListener('blur',  function() { validateField(input); });
+    });
+
+    document.getElementById('newCaseForm').addEventListener('submit', function(e) {
+        var allValid = true;
+        Object.keys(rules).forEach(function(id) {
+            if (!validateField(document.getElementById(id))) allValid = false;
+        });
+        if (!allValid) e.preventDefault();
+    });
+})();
+
+function handleCaseAction(selectElement, caseId) {
+    const action = selectElement.value;
+    if (action === 'view') {
+        window.location.href = '/case/' + caseId;
+    } else if (action === 'close') {
+        if (confirm('Are you sure you want to close case ' + caseId + '?')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/case/' + caseId + '/close';
+            document.body.appendChild(form);
+            form.submit();
+        } else {
+            selectElement.selectedIndex = 0;
+        }
+    } else if (action === 'delete') {
+        if (confirm('Are you sure you want to permanently delete case ' + caseId + '? This cannot be undone.')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/case/' + caseId + '/delete';
+            document.body.appendChild(form);
+            form.submit();
+        } else {
+            selectElement.selectedIndex = 0;
+        }
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,306 @@
+[
+    {
+        "tx_id": "tx_875d283edd68d07096d67dabe4f00013",
+        "timestamp": "2026-09-27T20:11:15.317643+00:00",
+        "record_hash": "00b26e77859c3b8c67c03464c57dd3ff82948591fbfb563ce383092ad28bd8ee",
+        "previous_hash": "GENESIS",
+        "payload": {
+            "case_id": "CASE-180ae9efd915409db59ba907fbe3599e",
+            "artifact_name": "test_file.txt",
+            "artifact_type": "disk_image",
+            "sha256_hash": "fakehash123",
+            "performed_by": "Investigator",
+            "previous_hash": "GENESIS",
+            "artifact_id": 1,
+            "recorded_at": "2026-09-27T20:11:15.317448+00:00"
+        }
+    },
+    {
+        "tx_id": "tx_4e239ecc790beee246b8e6e90cfde57d",
+        "timestamp": "2026-09-27T20:30:51.258136+00:00",
+        "record_hash": "895466f9cd8f17a7f540cec32f0d0a186b659fedbcc1de51c2d9b076afbc1231",
+        "previous_hash": "00b26e77859c3b8c67c03464c57dd3ff82948591fbfb563ce383092ad28bd8ee",
+        "payload": {
+            "case_id": "CASE-2026-01",
+            "artifact_name": "netstat_20260927_202758.txt",
+            "artifact_type": "network",
+            "sha256_hash": "3cd9cb9d638e8bcc1d20081ac8155f1326d7b56154cf118f77be6275845228d8",
+            "performed_by": "Investigator",
+            "previous_hash": "00b26e77859c3b8c67c03464c57dd3ff82948591fbfb563ce383092ad28bd8ee",
+            "artifact_id": 1,
+            "recorded_at": "2026-09-27T20:30:51.257996+00:00"
+        }
+    },
+    {
+        "tx_id": "tx_cd25911c158390a00459f89f9b443ca9",
+        "timestamp": "2026-09-27T20:30:51.350128+00:00",
+        "record_hash": "eab7e35a787078bc8bd0d2eceae7712f315c9b557d5fadef03c5c43149b87a9d",
+        "previous_hash": "895466f9cd8f17a7f540cec32f0d0a186b659fedbcc1de51c2d9b076afbc1231",
+        "payload": {
+            "case_id": "CASE-2026-01",
+            "artifact_name": "journalctl_20260927_202758.txt",
+            "artifact_type": "journal_log",
+            "sha256_hash": "ddd4c3232bdb479bcf3c862907e018a375e20c83a8a502196477adb6b63efed9",
+            "performed_by": "Investigator",
+            "previous_hash": "895466f9cd8f17a7f540cec32f0d0a186b659fedbcc1de51c2d9b076afbc1231",
+            "artifact_id": 2,
+            "recorded_at": "2026-09-27T20:30:51.346557+00:00"
+        }
+    },
+    {
+        "tx_id": "tx_5c8a55d3dbc76a8bf078b18bc03d9f67",
+        "timestamp": "2026-09-27T20:30:51.435881+00:00",
+        "record_hash": "eef704a6535096cc2b6715a2cfedbf14f5fd1f2c5bfec7b7cb340e71ff56dbc2",
+        "previous_hash": "eab7e35a787078bc8bd0d2eceae7712f315c9b557d5fadef03c5c43149b87a9d",
+        "payload": {
+            "case_id": "CASE-2026-01",
+            "artifact_name": "bash_history_kali_20260927_202820",
+            "artifact_type": "bash_history",
+            "sha256_hash": "dcb065cec6b80fd465e507a22ac020c46f98f7ff36b301c224b06703ee377df1",
+            "performed_by": "Investigator",
+            "previous_hash": "eab7e35a787078bc8bd0d2eceae7712f315c9b557d5fadef03c5c43149b87a9d",
+            "artifact_id": 3,
+            "recorded_at": "2026-09-27T20:30:51.435789+00:00"
+        }
+    },
+    {
+        "tx_id": "tx_91ed3c4777365794850e1365ce96f111",
+        "timestamp": "2026-09-27T20:30:51.557272+00:00",
+        "record_hash": "341cf2d1159b52d8c5c5fb130402e4daeacb8222f04d02f80edacd0b3d2d3e0a",
+        "previous_hash": "eef704a6535096cc2b6715a2cfedbf14f5fd1f2c5bfec7b7cb340e71ff56dbc2",
+        "payload": {
+            "case_id": "CASE-2026-01",
+            "artifact_name": "passwd_20260927_202820",
+            "artifact_type": "config_file",
+            "sha256_hash": "fd0e6ac5fd055268509383e696d802a23e799eca448918cfa1645f5832258b73",
+            "performed_by": "Investigator",
+            "previous_hash": "eef704a6535096cc2b6715a2cfedbf14f5fd1f2c5bfec7b7cb340e71ff56dbc2",
+            "artifact_id": 4,
+            "recorded_at": "2026-09-27T20:30:51.553990+00:00"
+        }
+    },
+    {
+        "tx_id": "tx_4b52305c57355fb8c0792de5faf572d3",
+        "timestamp": "2026-09-27T20:30:51.669461+00:00",
+        "record_hash": "658acc7885e37bc094fc45d823bd698c320fff93c6cdf12e1ed28b96d5c2d276",
+        "previous_hash": "341cf2d1159b52d8c5c5fb130402e4daeacb8222f04d02f80edacd0b3d2d3e0a",
+        "payload": {
+            "case_id": "CASE-2026-01",
+            "artifact_name": "hosts_20260927_202820",
+            "artifact_type": "config_file",
+            "sha256_hash": "6fd9c7bd387afb44604a06bf2e5791dfa9eb058653ddaa1f9accd2eb4a365055",
+            "performed_by": "Investigator",
+            "previous_hash": "341cf2d1159b52d8c5c5fb130402e4daeacb8222f04d02f80edacd0b3d2d3e0a",
+            "artifact_id": 5,
+            "recorded_at": "2026-09-27T20:30:51.669240+00:00"
+        }
+    },
+    {
+        "tx_id": "tx_77b7a5e48eb23e5fd79a0b37cf1ef230",
+        "timestamp": "2026-09-27T20:30:51.797312+00:00",
+        "record_hash": "3ae0ae6810433b51f4a705f7034fc8207c7c11b5165fc70d22689c0abed8b1a9",
+        "previous_hash": "658acc7885e37bc094fc45d823bd698c320fff93c6cdf12e1ed28b96d5c2d276",
+        "payload": {
+            "case_id": "CASE-2026-01",
+            "artifact_name": "hostname_20260927_202820",
+            "artifact_type": "config_file",
+            "sha256_hash": "101dc522abe5aa727b6f25ad8dfc16665dfd3d248084cd44fb98e13d69041b4d",
+            "performed_by": "Investigator",
+            "previous_hash": "658acc7885e37bc094fc45d823bd698c320fff93c6cdf12e1ed28b96d5c2d276",
+            "artifact_id": 6,
+            "recorded_at": "2026-09-27T20:30:51.797173+00:00"
+        }
+    },
+    {
+        "tx_id": "tx_af581691fb1c47b4ab39702bbb227d55",
+        "timestamp": "2026-09-27T20:30:51.912850+00:00",
+        "record_hash": "7055f83a0ac53dbf2a1cd1c8e9373d60b615d604ead4753858260c605028e41b",
+        "previous_hash": "3ae0ae6810433b51f4a705f7034fc8207c7c11b5165fc70d22689c0abed8b1a9",
+        "payload": {
+            "case_id": "CASE-2026-01",
+            "artifact_name": "fstab_20260927_202820",
+            "artifact_type": "config_file",
+            "sha256_hash": "1c94143e720d9150b115790e4c9e727e56a549e605fec78992c57e341dbc00b2",
+            "performed_by": "Investigator",
+            "previous_hash": "3ae0ae6810433b51f4a705f7034fc8207c7c11b5165fc70d22689c0abed8b1a9",
+            "artifact_id": 7,
+            "recorded_at": "2026-09-27T20:30:51.912667+00:00"
+        }
+    },
+    {
+        "tx_id": "tx_9856ab2b1b67d2840d12d7921d19d73a",
+        "timestamp": "2026-09-27T20:30:52.053535+00:00",
+        "record_hash": "541b67873604ff8cb878fc1fbce197360144e74e4653b045daa26ae2cdd3f98b",
+        "previous_hash": "7055f83a0ac53dbf2a1cd1c8e9373d60b615d604ead4753858260c605028e41b",
+        "payload": {
+            "case_id": "CASE-2026-01",
+            "artifact_name": "crontab_20260927_202821",
+            "artifact_type": "config_file",
+            "sha256_hash": "e25eb0e3303ea63ac7452139be788efa86d89a11005288e7150c0ac193d7e1f6",
+            "performed_by": "Investigator",
+            "previous_hash": "7055f83a0ac53dbf2a1cd1c8e9373d60b615d604ead4753858260c605028e41b",
+            "artifact_id": 8,
+            "recorded_at": "2026-09-27T20:30:52.053412+00:00"
+        }
+    },
+    {
+        "tx_id": "tx_41f0c6e2467d07098efeb33f41cce6f4",
+        "timestamp": "2026-09-27T20:30:52.157855+00:00",
+        "record_hash": "af420e10fd17f9847671352eb54164c251315eec028274a8f677310ca415dacb",
+        "previous_hash": "541b67873604ff8cb878fc1fbce197360144e74e4653b045daa26ae2cdd3f98b",
+        "payload": {
+            "case_id": "CASE-2026-01",
+            "artifact_name": "browser_history_firefox_kali_20260927_202821.sqlite",
+            "artifact_type": "firefox_history",
+            "sha256_hash": "71629c536ba9fdf804200327896f3f26408f0c271c91042e3f941ae67a95c8cb",
+            "performed_by": "Investigator",
+            "previous_hash": "541b67873604ff8cb878fc1fbce197360144e74e4653b045daa26ae2cdd3f98b",
+            "artifact_id": 9,
+            "recorded_at": "2026-09-27T20:30:52.157662+00:00"
+        }
+    },
+    {
+        "tx_id": "tx_6b1010d05ac072aa53a609316cf51ea8",
+        "timestamp": "2026-09-27T21:00:24.273549+00:00",
+        "record_hash": "da9ab1bbc539813d54ba204d9c64da711a966b33b111d245837e273d1979d18c",
+        "previous_hash": "af420e10fd17f9847671352eb54164c251315eec028274a8f677310ca415dacb",
+        "payload": {
+            "case_id": "CASE-2026-01",
+            "artifact_name": "netstat_20260927_205943.txt",
+            "artifact_type": "network",
+            "sha256_hash": "a97de65f809426aad52d6bf3d8a44d8f1ad61bffb346d73067361d17ae4e470f",
+            "performed_by": "Investigator",
+            "previous_hash": "af420e10fd17f9847671352eb54164c251315eec028274a8f677310ca415dacb",
+            "artifact_id": 10,
+            "recorded_at": "2026-09-27T21:00:24.273298+00:00"
+        }
+    },
+    {
+        "tx_id": "tx_982f95882a1b27e541537909552f8eea",
+        "timestamp": "2026-09-27T21:00:24.352713+00:00",
+        "record_hash": "7aa62a375dcbd1491306ac7b183716d7927a52fd82eb8d95bc49dbf2ffed2bf1",
+        "previous_hash": "da9ab1bbc539813d54ba204d9c64da711a966b33b111d245837e273d1979d18c",
+        "payload": {
+            "case_id": "CASE-2026-01",
+            "artifact_name": "journalctl_20260927_205943.txt",
+            "artifact_type": "journal_log",
+            "sha256_hash": "93d3360b93eb652dfe638339607a982cc78444a2956f4a925814b5f42c73f481",
+            "performed_by": "Investigator",
+            "previous_hash": "da9ab1bbc539813d54ba204d9c64da711a966b33b111d245837e273d1979d18c",
+            "artifact_id": 11,
+            "recorded_at": "2026-09-27T21:00:24.352536+00:00"
+        }
+    },
+    {
+        "tx_id": "tx_ebd5598a42973c955ef12fbc12e87882",
+        "timestamp": "2026-09-27T21:00:24.426684+00:00",
+        "record_hash": "397a0a77fca036f88144e8b6e52f5e092d628e162dd94cd83b7027bd5f40821b",
+        "previous_hash": "7aa62a375dcbd1491306ac7b183716d7927a52fd82eb8d95bc49dbf2ffed2bf1",
+        "payload": {
+            "case_id": "CASE-2026-01",
+            "artifact_name": "bash_history_kali_20260927_205945",
+            "artifact_type": "bash_history",
+            "sha256_hash": "dcb065cec6b80fd465e507a22ac020c46f98f7ff36b301c224b06703ee377df1",
+            "performed_by": "Investigator",
+            "previous_hash": "7aa62a375dcbd1491306ac7b183716d7927a52fd82eb8d95bc49dbf2ffed2bf1",
+            "artifact_id": 12,
+            "recorded_at": "2026-09-27T21:00:24.426526+00:00"
+        }
+    },
+    {
+        "tx_id": "tx_9efb76b7739af5924658bab563dd37ce",
+        "timestamp": "2026-09-27T21:00:24.581234+00:00",
+        "record_hash": "4ad1a31c5545da5d55135e6fc7051800fa4171f6215e56a4225f5c309924dc55",
+        "previous_hash": "397a0a77fca036f88144e8b6e52f5e092d628e162dd94cd83b7027bd5f40821b",
+        "payload": {
+            "case_id": "CASE-2026-01",
+            "artifact_name": "passwd_20260927_205945",
+            "artifact_type": "config_file",
+            "sha256_hash": "fd0e6ac5fd055268509383e696d802a23e799eca448918cfa1645f5832258b73",
+            "performed_by": "Investigator",
+            "previous_hash": "397a0a77fca036f88144e8b6e52f5e092d628e162dd94cd83b7027bd5f40821b",
+            "artifact_id": 13,
+            "recorded_at": "2026-09-27T21:00:24.581112+00:00"
+        }
+    },
+    {
+        "tx_id": "tx_cff509ee953f11c2242c6924d5cfdc70",
+        "timestamp": "2026-09-27T21:00:24.749523+00:00",
+        "record_hash": "b624fb3cbf84dee92993774724aece3b44d8ddd971d20eef78636295ac6adf46",
+        "previous_hash": "4ad1a31c5545da5d55135e6fc7051800fa4171f6215e56a4225f5c309924dc55",
+        "payload": {
+            "case_id": "CASE-2026-01",
+            "artifact_name": "hosts_20260927_205945",
+            "artifact_type": "config_file",
+            "sha256_hash": "6fd9c7bd387afb44604a06bf2e5791dfa9eb058653ddaa1f9accd2eb4a365055",
+            "performed_by": "Investigator",
+            "previous_hash": "4ad1a31c5545da5d55135e6fc7051800fa4171f6215e56a4225f5c309924dc55",
+            "artifact_id": 14,
+            "recorded_at": "2026-09-27T21:00:24.749424+00:00"
+        }
+    },
+    {
+        "tx_id": "tx_993371bd9c3e4e4897e9b0b7122a843a",
+        "timestamp": "2026-09-27T21:00:24.997579+00:00",
+        "record_hash": "0f2f4c719a353ac55eaf5b1368b7f4ebc0ec2d68b13c648fdd631b854d05a417",
+        "previous_hash": "b624fb3cbf84dee92993774724aece3b44d8ddd971d20eef78636295ac6adf46",
+        "payload": {
+            "case_id": "CASE-2026-01",
+            "artifact_name": "hostname_20260927_205945",
+            "artifact_type": "config_file",
+            "sha256_hash": "101dc522abe5aa727b6f25ad8dfc16665dfd3d248084cd44fb98e13d69041b4d",
+            "performed_by": "Investigator",
+            "previous_hash": "b624fb3cbf84dee92993774724aece3b44d8ddd971d20eef78636295ac6adf46",
+            "artifact_id": 15,
+            "recorded_at": "2026-09-27T21:00:24.997296+00:00"
+        }
+    },
+    {
+        "tx_id": "tx_12ce5b14c2e67980b02fecc000c8697b",
+        "timestamp": "2026-09-27T21:00:25.177143+00:00",
+        "record_hash": "ea121e73d1b56afca6886315a104ecf909dd96957b07df1b56fdee37a1dad3fe",
+        "previous_hash": "0f2f4c719a353ac55eaf5b1368b7f4ebc0ec2d68b13c648fdd631b854d05a417",
+        "payload": {
+            "case_id": "CASE-2026-01",
+            "artifact_name": "fstab_20260927_205945",
+            "artifact_type": "config_file",
+            "sha256_hash": "1c94143e720d9150b115790e4c9e727e56a549e605fec78992c57e341dbc00b2",
+            "performed_by": "Investigator",
+            "previous_hash": "0f2f4c719a353ac55eaf5b1368b7f4ebc0ec2d68b13c648fdd631b854d05a417",
+            "artifact_id": 16,
+            "recorded_at": "2026-09-27T21:00:25.176954+00:00"
+        }
+    },
+    {
+        "tx_id": "tx_a368a52c6656f7895067bcb8e6cf6719",
+        "timestamp": "2026-09-27T21:00:25.316041+00:00",
+        "record_hash": "97453e0dae458d044d1b01d6aa0d815c28049ea8d5b3a7bbf476c758fc7c5ec6",
+        "previous_hash": "ea121e73d1b56afca6886315a104ecf909dd96957b07df1b56fdee37a1dad3fe",
+        "payload": {
+            "case_id": "CASE-2026-01",
+            "artifact_name": "crontab_20260927_205945",
+            "artifact_type": "config_file",
+            "sha256_hash": "e25eb0e3303ea63ac7452139be788efa86d89a11005288e7150c0ac193d7e1f6",
+            "performed_by": "Investigator",
+            "previous_hash": "ea121e73d1b56afca6886315a104ecf909dd96957b07df1b56fdee37a1dad3fe",
+            "artifact_id": 17,
+            "recorded_at": "2026-09-27T21:00:25.315888+00:00"
+        }
+    },
+    {
+        "tx_id": "tx_61679ba29ab0f87cc38958996ef2bfef",
+        "timestamp": "2026-09-27T21:00:25.436849+00:00",
+        "record_hash": "c97cd113b9dee453d64b32f7174dbca71635ed6e1afe6e68b60f53e2d9e377bb",
+        "previous_hash": "97453e0dae458d044d1b01d6aa0d815c28049ea8d5b3a7bbf476c758fc7c5ec6",
+        "payload": {
+            "case_id": "CASE-2026-01",
+            "artifact_name": "browser_history_firefox_kali_20260927_205945.sqlite",
+            "artifact_type": "firefox_history",
+            "sha256_hash": "71629c536ba9fdf804200327896f3f26408f0c271c91042e3f941ae67a95c8cb",
+            "performed_by": "Investigator",
+            "previous_hash": "97453e0dae458d044d1b01d6aa0d815c28049ea8d5b3a7bbf476c758fc7c5ec6",
+            "artifact_id": 18,
+            "recorded_at": "2026-09-27T21:00:25.436698+00:00"
+        }
+    }
+]

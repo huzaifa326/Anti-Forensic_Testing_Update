@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card dashboard-container">
+    <div class="navbar">
+        <span>CyberForensX Zero-Footprint Toolkit</span>
+        <div>
+            <span style="margin-right: 15px; color: #3b82f6;">Investigator: {{ current_user.username }}</span>
+            <a href="{{ url_for('logout') }}" style="text-decoration: none;"><button class="btn-small">Logout</button></a>
+        </div>
+    </div>
+    
+    <h2 style="text-align: left; margin-bottom: 16px;">Live Triage Acquisition</h2>
+
+    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 16px; margin-bottom: 20px; text-align: left;">
+        <h3 style="margin-top: 0; font-size: 1rem; color: #60a5fa; margin-bottom: 12px;">
+            <i class="fa-solid fa-folder-plus"></i> New Case Details
+        </h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+            <div>
+                <label style="font-size: 0.8rem; color: #9ca3af; display: block; margin-bottom: 4px;">Case ID</label>
+                <input type="text" id="caseId" placeholder="e.g. CASE-2026-001" style="font-family: monospace; width: 100%; box-sizing: border-box; margin: 0;">
+            </div>
+            <div>
+                <label style="font-size: 0.8rem; color: #9ca3af; display: block; margin-bottom: 4px;">Case Title</label>
+                <input type="text" id="caseTitle" placeholder="e.g. Host Triage Collection" style="width: 100%; box-sizing: border-box; margin: 0;">
+            </div>
+        </div>
+        <div>
+            <label style="font-size: 0.8rem; color: #9ca3af; display: block; margin-bottom: 4px;">Investigator Name</label>
+            <input type="text" id="investigator" placeholder="e.g. Investigator Hamna" value="{{ current_user.username }}" style="width: 100%; box-sizing: border-box; margin: 0;">
+        </div>
+    </div>
+    
+    <h3 style="text-align: left; font-size: 0.95rem; color: #e5e7eb; margin-bottom: 10px;">Acquisition Modules</h3>
+    <div class="checkbox-group">
+        <label><input type="checkbox" id="modVolatile" checked> Volatile Internal Network State (ss)</label>
+        <label><input type="checkbox" id="modLogs" checked> Security & Auth Systems Logs (/var/log/)</label>
+        <label><input type="checkbox" id="modHistory" checked> Terminal Command History (.bash_history, .zsh_history)</label>
+        <label><input type="checkbox" id="modBrowser" checked> Web Browser History (Chrome, Firefox sqlite arrays)</label>
+        <label><input type="checkbox" id="modDisk" checked> Hard Disk Configurations (/etc/passwd, shadow, hosts, fstab)</label>
+    </div>
+
+    <button onclick="startCollection()">Initiate Evidence Acquisition</button>
+    
+    <div class="log-box" id="logs">
+        [SYSTEM READY] Standby for acquisition targets...
+    </div>
+</div>
+
+<script>
+    async function startCollection() {
+        const caseId = document.getElementById("caseId").value.trim() || "CASE-OFFLINE-001";
+        const title = document.getElementById("caseTitle").value.trim() || "Offline Triage Import";
+        const investigator = document.getElementById("investigator").value.trim() || "{{ current_user.username }}";
+
+        const modules = [];
+        if(document.getElementById("modVolatile").checked) modules.push("volatile");
+        if(document.getElementById("modLogs").checked) modules.push("logs");
+        if(document.getElementById("modHistory").checked) modules.push("history");
+        if(document.getElementById("modBrowser").checked) modules.push("browser");
+        if(document.getElementById("modDisk").checked) modules.push("disk");
+
+        await fetch("/api/start", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({case_id: caseId, title: title, investigator: investigator, modules: modules})
+        });
+        pollStatus();
+    }
+
+    async function pollStatus() {
+        const res = await fetch("/api/status");
+        if(res.status === 401) {
+            window.location.href = "/login";
+            return;
+        }
+        const data = await res.json();
+        const logBox = document.getElementById("logs");
+        if(data.logs && data.logs.length > 0) {
+            logBox.innerHTML = data.logs.join("<br>");
+        }
+        logBox.scrollTop = logBox.scrollHeight;
+        if (data.status === "running") {
+            setTimeout(pollStatus, 1000);
+        }
+    }
+</script>
+{% endblock %}
